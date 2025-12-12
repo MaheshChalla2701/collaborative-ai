@@ -1,8 +1,8 @@
-# LLM Council
+# Collaborative AI
 
 ![llmcouncil](header.jpg)
 
-The idea of this repo is that instead of asking a question to your favorite LLM provider (e.g. OpenAI GPT 5.1, Google Gemini 3.0 Pro, Anthropic Claude Sonnet 4.5, xAI Grok 4, eg.c), you can group them into your "LLM Council". This repo is a simple, local web app that essentially looks like ChatGPT except it uses OpenRouter to send your query to multiple LLMs, it then asks them to review and rank each other's work, and finally a Chairman LLM produces the final response.
+The idea of this repo is that instead of asking a question to your favorite LLM provider (e.g. OpenAI GPT 5.1, Google Gemini 3.0 Pro, Anthropic Claude Sonnet 4.5, xAI Grok 4, eg.c), you can group them into your collaborative council. This repo is a simple, local web app that essentially looks like ChatGPT except it uses OpenRouter to send your query to multiple LLMs, it then asks them to review and rank each other's work, and finally a Chairman LLM produces the final response.
 
 In a bit more detail, here is what happens when you submit a query:
 
@@ -12,7 +12,7 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Vibe Code Alert
 
-This project was 99% vibe coded as a fun Saturday hack because I wanted to explore and evaluate a number of LLMs side by side in the process of [reading books together with LLMs](https://x.com/karpathy/status/1990577951671509438). It's nice and useful to see multiple responses side by side, and also the cross-opinions of all LLMs on each other's outputs. I'm not going to support it in any way, it's provided here as is for other people's inspiration and I don't intend to improve it. Code is ephemeral now and libraries are over, ask your LLM to change it in whatever way you like.
+This project was 99% vibe coded as a fun Saturday hack because I wanted to explore and evaluate a number of LLMs side by side in the process of reading books together with LLMs. It's nice and useful to see multiple responses side by side, and also the cross-opinions of all LLMs on each other's outputs. it's provided here as is for other people's inspiration and I don't intend to improve it. Code is ephemeral now and libraries are over, ask your LLM to change it in whatever way you like.
 
 ## Setup
 
@@ -48,13 +48,18 @@ Edit `backend/config.py` to customize the council:
 
 ```python
 COUNCIL_MODELS = [
-    "openai/gpt-5.1",
-    "google/gemini-3-pro-preview",
-    "anthropic/claude-sonnet-4.5",
-    "x-ai/grok-4",
+    "amazon/nova-2-lite-free", 
+    "arcee-ai/trinity-mini-free", 
+    "deepseek/deepseek-v3.2", 
+    "mistralai/ministral-3-14b-instruct-2512",
+    "deepseek/deepseek-v3.2-speciale",
+    "x-ai/grok-4.1-fast",
+    "nvidia/nemotron-nano-12b-v2-vl:free", 
+    "openai/gpt-oss-safeguard-20b", 
+    "qwen/qwen3-vl-30b-a3b-thinking",
 ]
 
-CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
+CHAIRMAN_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"
 ```
 
 ## Running the Application

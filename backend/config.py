@@ -1,4 +1,4 @@
-"""Configuration for the LLM Council."""
+"""Configuration for Collaborative AI."""
 
 import os
 from dotenv import load_dotenv
@@ -22,7 +22,7 @@ COUNCIL_MODELS = [
 ]
 
 # Chairman model - synthesizes final response
-CHAIRMAN_MODEL = "deepseek/deepseek-v3.2-speciale"
+CHAIRMAN_MODEL = "nemotron-nano-12b-v2-vl:free"
 
 # OpenRouter API endpoint
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"

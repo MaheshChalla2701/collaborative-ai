@@ -1,4 +1,4 @@
-"""FastAPI backend for LLM Council."""
+"""FastAPI backend for Collaborative AI."""
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,7 @@ import asyncio
 from . import storage
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
-app = FastAPI(title="LLM Council API")
+app = FastAPI(title="Collaborative AI API")
 
 # Enable CORS for local development
 app.add_middleware(
@@ -53,7 +53,7 @@ class Conversation(BaseModel):
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {"status": "ok", "service": "LLM Council API"}
+    return {"status": "ok", "service": "Collaborative AI API"}
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
@@ -79,6 +79,15 @@ async def get_conversation(conversation_id: str):
     return conversation
 
 
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """Delete a specific conversation."""
+    success = storage.delete_conversation(conversation_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"status": "deleted", "id": conversation_id}
+
+
 @app.post("/api/conversations/{conversation_id}/message")
 async def send_message(conversation_id: str, request: SendMessageRequest):
     """
@@ -101,7 +110,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
     # If this is the first message, generate a title
     if is_first_message:
-        title = await generate_conversation_title(request.content)
+        title = generate_conversation_title(request.content)
         storage.update_conversation_title(conversation_id, title)
 
     # Run the 3-stage council process with conversation history
@@ -149,10 +158,11 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             # Add user message
             storage.add_user_message(conversation_id, request.content)
 
-            # Start title generation in parallel (don't await yet)
-            title_task = None
+            # Generate title immediately if this is the first message
             if is_first_message:
-                title_task = asyncio.create_task(generate_conversation_title(request.content))
+                title = generate_conversation_title(request.content)
+                storage.update_conversation_title(conversation_id, title)
+                yield f"data: {json.dumps({'type': 'title_complete', 'data': {'title': title}})}\n\n"
 
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
@@ -170,11 +180,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             stage3_result = await stage3_synthesize_final(request.content, stage1_results, stage2_results, conversation_history)
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
-            # Wait for title generation if it was started
-            if title_task:
-                title = await title_task
-                storage.update_conversation_title(conversation_id, title)
-                yield f"data: {json.dumps({'type': 'title_complete', 'data': {'title': title}})}\n\n"
+
 
             # Save complete assistant message
             storage.add_assistant_message(

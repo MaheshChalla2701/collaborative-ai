@@ -1,25 +1,37 @@
-.stage3 {
-  background: #f0fff0;
-  border-color: #c8e6c8;
+.stage3-results {
+  margin-top: 60px;
+  background: linear-gradient(180deg, rgba(22, 27, 34, 0.95) 0%, rgba(13, 17, 23, 0.98) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 0 50px rgba(34, 211, 238, 0.1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
 }
-
-.final-response {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 6px;
-  border: 1px solid #c8e6c8;
-}
-
 .chairman-label {
-  color: #2d8a2d;
-  font-size: 12px;
-  font-family: monospace;
-  margin-bottom: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(34, 211, 238, 0.1);
+  padding: 10px 24px;
+  border-radius: 30px;
+  color: #22d3ee;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 32px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.2);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
 }
 
-.final-text {
-  color: #333;
-  line-height: 1.7;
-  font-size: 15px;
+.final-answer {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #ffffff;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
 }
