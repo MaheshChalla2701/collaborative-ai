@@ -5,8 +5,12 @@ The idea of this repo is that instead of asking a question to your favorite LLM 
 In a bit more detail, here is what happens when you submit a query:
 
 1. **Stage 1: First opinions**. The user query is given to all LLMs individually, and the responses are collected. The individual responses are shown in a "tab view", so that the user can inspect them all one by one.
+![Stage 1: Individual Responses](stage1.png)
 2. **Stage 2: Review**. Each individual LLM is given the responses of the other LLMs. Under the hood, the LLM identities are anonymized so that the LLM can't play favorites when judging their outputs. The LLM is asked to rank them in accuracy and insight.
+![Stage 2: Peer Rankings](stage2.png)
+![Aggregate Rankings](aggregate_rankings.png)
 3. **Stage 3: Final response**. The designated Chairman of the LLM Council takes all of the model's responses and compiles them into a single final answer that is presented to the user.
+![Stage 3: Final Council Answer](stage3.png)
 
 ## Vibe Code Alert
 

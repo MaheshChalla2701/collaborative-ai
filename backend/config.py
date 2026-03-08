@@ -19,10 +19,13 @@ COUNCIL_MODELS = [
      "nvidia/nemotron-nano-12b-v2-vl:free", 
     "openai/gpt-oss-safeguard-20b", 
     "qwen/qwen3-vl-30b-a3b-thinking",
+    "stepfun/step-3.5-flash:free",
+    "arcee-ai/trinity-large-preview:free",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
 ]
 
 # Chairman model - synthesizes final response
-CHAIRMAN_MODEL = "nemotron-nano-12b-v2-vl:free"
+CHAIRMAN_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
 
 # OpenRouter API endpoint
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
