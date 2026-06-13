@@ -1,37 +1,30 @@
-.stage3-results {
-  margin-top: 60px;
-  background: linear-gradient(180deg, rgba(22, 27, 34, 0.95) 0%, rgba(13, 17, 23, 0.98) 100%);
-  border: 1px solid rgba(34, 211, 238, 0.5);
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 0 50px rgba(34, 211, 238, 0.1);
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(20px);
+/* Stage 3 — Final Answer */
+
+.stage3 {
+  border-color: rgba(34,211,238,0.25) !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.04) 0%, var(--bg-secondary) 60%) !important;
 }
+
 .chairman-label {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(34, 211, 238, 0.1);
-  padding: 10px 24px;
-  border-radius: 30px;
-  color: #22d3ee;
-  font-size: 14px;
-  font-weight: 800;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-bottom: 32px;
-  border: 1px solid rgba(34, 211, 238, 0.3);
-  box-shadow: 0 0 30px rgba(34, 211, 238, 0.2);
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  letter-spacing: 0.09em;
+  color: var(--accent-primary);
+  margin: 14px 16px 4px;
 }
 
-.final-answer {
-  font-size: 18px;
+.chairman-label::before {
+  content: '👑';
+  font-size: 13px;
+}
+
+.final-text {
+  padding: 0 16px 16px;
+  font-size: 15px;
   line-height: 1.8;
-  color: #ffffff;
-  font-weight: 300;
-  letter-spacing: 0.01em;
-  text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
 }
