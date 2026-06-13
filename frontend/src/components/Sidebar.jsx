@@ -6,6 +6,7 @@ export default function Sidebar({
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
+  onOpenSettings,
 }) {
   const handleDelete = (e, convId) => {
     e.stopPropagation(); // Prevent selecting the conversation
@@ -53,6 +54,12 @@ export default function Sidebar({
             </div>
           ))
         )}
+      </div>
+
+      <div className="sidebar-footer">
+        <button className="settings-btn" onClick={onOpenSettings}>
+          ⚙️ Settings
+        </button>
       </div>
     </div>
   );

@@ -1,0 +1,178 @@
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.settings-modal {
+  background: #1e1e2e;
+  border: 1px solid #3b3b54;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.settings-header {
+  padding: 20px;
+  border-bottom: 1px solid #3b3b54;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-header h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #a0a0b0;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.settings-content {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section h3 {
+  margin: 0 0 8px 0;
+  color: #22d3ee;
+  font-size: 16px;
+}
+
+.help-text {
+  font-size: 13px;
+  color: #a0a0b0;
+  margin: 0 0 16px 0;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  color: #e0e0e0;
+  margin-bottom: 6px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a3c;
+  border: 1px solid #4b4b64;
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #22d3ee;
+}
+
+.warning-box {
+  padding: 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.provider-models {
+  margin-bottom: 16px;
+}
+
+.provider-models h4 {
+  margin: 0 0 10px 0;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.model-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a3c;
+  border: 1px solid #4b4b64;
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+}
+
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #3b3b54;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #4b4b64;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background: #22d3ee;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.save-btn:disabled {
+  background: #4b4b64;
+  color: #a0a0b0;
+  cursor: not-allowed;
+}

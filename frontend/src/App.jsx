@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import SettingsModal from './components/SettingsModal';
 import { api } from './api';
 import './App.css';
 
@@ -9,6 +10,21 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [appConfig, setAppConfig] = useState(() => {
+    const saved = localStorage.getItem('aiAppConfig');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Check if config is valid
+  const hasValidConfig = appConfig && appConfig.council_models?.length > 0 && appConfig.master_model;
+
+  // Open settings on first load if no config
+  useEffect(() => {
+    if (!hasValidConfig) {
+      setIsSettingsOpen(true);
+    }
+  }, [hasValidConfig]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -73,7 +89,7 @@ function App() {
   };
 
   const handleSendMessage = async (content) => {
-    if (!currentConversationId) return;
+    if (!currentConversationId || !hasValidConfig) return;
 
     setIsLoading(true);
     try {
@@ -105,7 +121,7 @@ function App() {
       }));
 
       // Send message with streaming
-      await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
+      await api.sendMessageStream(currentConversationId, content, appConfig, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {
@@ -204,11 +220,34 @@ function App() {
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
-      <ChatInterface
-        conversation={currentConversation}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
+      {hasValidConfig ? (
+        <ChatInterface
+          conversation={currentConversation}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+        />
+      ) : (
+        <div className="chat-interface-placeholder" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#a0a0b0' }}>
+          <h2>Configuration Required</h2>
+          <p>Please open settings and configure your API keys and models to continue.</p>
+          <button 
+            style={{ marginTop: '20px', padding: '10px 20px', background: '#22d3ee', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            Open Settings
+          </button>
+        </div>
+      )}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        initialConfig={appConfig}
+        onSave={(config) => {
+          setAppConfig(config);
+          localStorage.setItem('aiAppConfig', JSON.stringify(config));
+        }}
       />
     </div>
   );

@@ -1,11 +1,10 @@
 """3-stage LLM Council orchestration."""
 
 from typing import List, Dict, Any, Tuple
-from .openrouter import query_models_parallel, query_model
-from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .providers import query_models_parallel, query_model
 
 
-async def stage1_collect_responses(user_query: str, conversation_history: List[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+async def stage1_collect_responses(user_query: str, conversation_history: List[Dict[str, Any]] = None, config: Any = None) -> List[Dict[str, Any]]:
     """
     Stage 1: Collect individual responses from all council models.
 
@@ -30,7 +29,8 @@ async def stage1_collect_responses(user_query: str, conversation_history: List[D
     messages.append({"role": "user", "content": user_query})
 
     # Query all models in parallel
-    responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    models_config = [m.dict() for m in config.council_models]
+    responses = await query_models_parallel(models_config, config.keys, messages)
 
     # Format results
     stage1_results = []
@@ -47,7 +47,8 @@ async def stage1_collect_responses(user_query: str, conversation_history: List[D
 async def stage2_collect_rankings(
     user_query: str,
     stage1_results: List[Dict[str, Any]],
-    conversation_history: List[Dict[str, Any]] = None
+    conversation_history: List[Dict[str, Any]] = None,
+    config: Any = None
 ) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
     """
     Stage 2: Each model ranks the anonymized responses.
@@ -109,7 +110,8 @@ Now provide your evaluation and ranking:"""
     messages = [{"role": "user", "content": ranking_prompt}]
 
     # Get rankings from all council models in parallel
-    responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    models_config = [m.dict() for m in config.council_models]
+    responses = await query_models_parallel(models_config, config.keys, messages)
 
     # Format results
     stage2_results = []
@@ -130,7 +132,8 @@ async def stage3_synthesize_final(
     user_query: str,
     stage1_results: List[Dict[str, Any]],
     stage2_results: List[Dict[str, Any]],
-    conversation_history: List[Dict[str, Any]] = None
+    conversation_history: List[Dict[str, Any]] = None,
+    config: Any = None
 ) -> Dict[str, Any]:
     """
     Stage 3: Chairman synthesizes final response.
@@ -187,17 +190,23 @@ Provide a clear, well-reasoned final answer that represents the council's collec
     messages = [{"role": "user", "content": chairman_prompt}]
 
     # Query the chairman model
-    response = await query_model(CHAIRMAN_MODEL, messages)
+    master_model = config.master_model.dict()
+    response = await query_model(
+        model=master_model["id"],
+        provider=master_model["provider"],
+        api_key=config.keys.get(master_model["provider"], ""),
+        messages=messages
+    )
 
     if response is None:
         # Fallback if chairman fails
         return {
-            "model": CHAIRMAN_MODEL,
+            "model": master_model["id"],
             "response": "Error: Unable to generate final synthesis."
         }
 
     return {
-        "model": CHAIRMAN_MODEL,
+        "model": master_model["id"],
         "response": response.get('content', '')
     }
 
@@ -307,7 +316,7 @@ def generate_conversation_title(user_query: str) -> str:
     return title if title else "Untitled Chat"
 
 
-async def run_full_council(user_query: str, conversation_history: List[Dict[str, Any]] = None) -> Tuple[List, List, Dict, Dict]:
+async def run_full_council(user_query: str, conversation_history: List[Dict[str, Any]] = None, config: Any = None) -> Tuple[List, List, Dict, Dict]:
     """
     Run the complete 3-stage council process.
 
@@ -319,7 +328,7 @@ async def run_full_council(user_query: str, conversation_history: List[Dict[str,
         Tuple of (stage1_results, stage2_results, stage3_result, metadata)
     """
     # Stage 1: Collect individual responses
-    stage1_results = await stage1_collect_responses(user_query, conversation_history)
+    stage1_results = await stage1_collect_responses(user_query, conversation_history, config=config)
 
     # If no models responded successfully, return error
     if not stage1_results:
@@ -329,7 +338,7 @@ async def run_full_council(user_query: str, conversation_history: List[Dict[str,
         }, {}
 
     # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results, conversation_history)
+    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results, conversation_history, config=config)
 
     # Calculate aggregate rankings
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
@@ -339,7 +348,8 @@ async def run_full_council(user_query: str, conversation_history: List[Dict[str,
         user_query,
         stage1_results,
         stage2_results,
-        conversation_history
+        conversation_history,
+        config=config
     )
 
     # Prepare metadata
