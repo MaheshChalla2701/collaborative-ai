@@ -30,9 +30,11 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
     """
     ensure_data_dir()
 
+    now = datetime.utcnow().isoformat()
     conversation = {
         "id": conversation_id,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": now,
+        "updated_at": now,
         "title": "New Conversation",
         "messages": []
     }
@@ -97,12 +99,13 @@ def list_conversations() -> List[Dict[str, Any]]:
                 conversations.append({
                     "id": data["id"],
                     "created_at": data["created_at"],
+                    "updated_at": data.get("updated_at", data["created_at"]),
                     "title": data.get("title", "New Conversation"),
                     "message_count": len(data["messages"])
                 })
 
-    # Sort by creation time, newest first
-    conversations.sort(key=lambda x: x["created_at"], reverse=True)
+    # Sort by last activity time, most recently active first
+    conversations.sort(key=lambda x: x["updated_at"], reverse=True)
 
     return conversations
 
@@ -123,6 +126,7 @@ def add_user_message(conversation_id: str, content: str):
         "role": "user",
         "content": content
     })
+    conversation["updated_at"] = datetime.utcnow().isoformat()
 
     save_conversation(conversation)
 
@@ -152,6 +156,7 @@ def add_assistant_message(
         "stage2": stage2,
         "stage3": stage3
     })
+    conversation["updated_at"] = datetime.utcnow().isoformat()
 
     save_conversation(conversation)
 

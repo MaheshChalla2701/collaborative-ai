@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import SettingsModal from './components/SettingsModal';
@@ -10,6 +10,9 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Ref flag: skip the loadConversation effect when we've already set the
+  // conversation manually (e.g. during auto-create in handleSendMessage).
+  const skipNextLoadRef = useRef(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [appConfig, setAppConfig] = useState(() => {
     const saved = localStorage.getItem('aiAppConfig');
@@ -31,9 +34,16 @@ function App() {
     loadConversations();
   }, []);
 
-  // Load conversation details when selected
+  // Load conversation details when selected.
+  // Skip the load when skipNextLoadRef is set — this happens when
+  // handleSendMessage auto-creates a conversation and already sets
+  // currentConversation manually (avoids overwriting optimistic UI).
   useEffect(() => {
     if (currentConversationId) {
+      if (skipNextLoadRef.current) {
+        skipNextLoadRef.current = false;
+        return;
+      }
       loadConversation(currentConversationId);
     }
   }, [currentConversationId]);
@@ -56,17 +66,13 @@ function App() {
     }
   };
 
-  const handleNewConversation = async () => {
-    try {
-      const newConv = await api.createConversation();
-      setConversations([
-        { id: newConv.id, created_at: newConv.created_at, message_count: 0 },
-        ...conversations,
-      ]);
-      setCurrentConversationId(newConv.id);
-    } catch (error) {
-      console.error('Failed to create conversation:', error);
-    }
+  const handleNewConversation = () => {
+    // Don't create a backend conversation yet — just reset the UI to the
+    // empty "home" state. The conversation will be created lazily by
+    // handleSendMessage the moment the user sends their first message.
+    // This matches ChatGPT behaviour: no message = nothing saved to history.
+    setCurrentConversationId(null);
+    setCurrentConversation(null);
   };
 
   const handleSelectConversation = (id) => {
@@ -93,15 +99,18 @@ function App() {
 
     setIsLoading(true);
     try {
-      // Auto-create a conversation if none is selected (ChatGPT-style)
+      // Auto-create a conversation if none is selected (ChatGPT-style).
+      // We set skipNextLoadRef = true BEFORE changing currentConversationId so
+      // the useEffect doesn't fire a loadConversation that would overwrite the
+      // optimistic messages we're about to add below.
       let convId = currentConversationId;
       if (!convId) {
         const newConv = await api.createConversation();
         convId = newConv.id;
-        setConversations(prev => [
-          { id: newConv.id, created_at: newConv.created_at, message_count: 0 },
-          ...prev,
-        ]);
+        setConversations(prev =>
+          [{ id: newConv.id, created_at: newConv.created_at, message_count: 0 }, ...prev]
+        );
+        skipNextLoadRef.current = true; // prevent effect from clobbering optimistic UI
         setCurrentConversationId(convId);
         setCurrentConversation({ ...newConv, messages: [] });
       }

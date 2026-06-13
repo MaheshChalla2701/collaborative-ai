@@ -34,10 +34,10 @@ async def query_openai_compatible(
     except httpx.HTTPStatusError as e:
         error_text = e.response.text
         print(f"Error querying {url} for model {model}: HTTP {e.response.status_code} - {error_text}")
-        return {'content': f"API Error (HTTP {e.response.status_code}): {error_text}"}
+        return None
     except Exception as e:
         print(f"Error querying {url} for model {model}: {e}")
-        return {'content': f"Error: {str(e)}"}
+        return None
 
 
 async def query_gemini(
@@ -85,10 +85,10 @@ async def query_gemini(
     except httpx.HTTPStatusError as e:
         error_text = e.response.text
         print(f"Error querying Gemini model {model}: HTTP {e.response.status_code} - {error_text}")
-        return {'content': f"API Error (HTTP {e.response.status_code}): {error_text}"}
+        return None
     except Exception as e:
         print(f"Error querying Gemini model {model}: {e}")
-        return {'content': f"Error: {str(e)}"}
+        return None
 
 
 async def query_model(

@@ -46,9 +46,12 @@ const PROVIDERS = [
   }
 ];
 
-// Flat lookup map
+// Flat lookup map: modelId -> { ...modelInfo, providerKey, providerLabel }
 const MODEL_LOOKUP = {};
 PROVIDERS.forEach(p => p.models.forEach(m => { MODEL_LOOKUP[m.id] = { ...m, providerKey: p.key, providerLabel: p.label }; }));
+
+// Set of all valid model IDs in the current PROVIDERS list
+const VALID_MODEL_IDS = new Set(Object.keys(MODEL_LOOKUP));
 
 export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }) {
   const [activeTab, setActiveTab] = useState('groq');
@@ -60,8 +63,16 @@ export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }
   useEffect(() => {
     if (isOpen && initialConfig) {
       setKeys(initialConfig.keys || { groq: '', gemini: '', cerebras: '' });
-      setSelectedModels(initialConfig.council_models || []);
-      setMasterModel(initialConfig.master_model || null);
+      // Filter out any stale model IDs that no longer exist in the current PROVIDERS list.
+      // This prevents old localStorage data (from previous app versions with different models)
+      // from silently inflating the council and sending invalid model IDs to the backend.
+      const validCouncilModels = (initialConfig.council_models || []).filter(
+        m => VALID_MODEL_IDS.has(m.id)
+      );
+      setSelectedModels(validCouncilModels);
+      // Also validate the master model
+      const savedMaster = initialConfig.master_model;
+      setMasterModel(savedMaster && VALID_MODEL_IDS.has(savedMaster.id) ? savedMaster : null);
     }
   }, [isOpen, initialConfig]);
 
