@@ -89,10 +89,22 @@ function App() {
   };
 
   const handleSendMessage = async (content) => {
-    if (!currentConversationId || !hasValidConfig) return;
+    if (!hasValidConfig) return;
 
     setIsLoading(true);
     try {
+      // Auto-create a conversation if none is selected (ChatGPT-style)
+      let convId = currentConversationId;
+      if (!convId) {
+        const newConv = await api.createConversation();
+        convId = newConv.id;
+        setConversations(prev => [
+          { id: newConv.id, created_at: newConv.created_at, message_count: 0 },
+          ...prev,
+        ]);
+        setCurrentConversationId(convId);
+        setCurrentConversation({ ...newConv, messages: [] });
+      }
       // Optimistically add user message to UI
       const userMessage = { role: 'user', content };
       setCurrentConversation((prev) => ({
@@ -121,7 +133,7 @@ function App() {
       }));
 
       // Send message with streaming
-      await api.sendMessageStream(currentConversationId, content, appConfig, (eventType, event) => {
+      await api.sendMessageStream(convId, content, appConfig, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {
@@ -222,17 +234,16 @@ function App() {
         onDeleteConversation={handleDeleteConversation}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
-      {hasValidConfig ? (
-        <ChatInterface
+      <ChatInterface
           conversation={currentConversation}
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
         />
-      ) : (
-        <div className="chat-interface-placeholder" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#a0a0b0' }}>
+      {!hasValidConfig && (
+        <div className="chat-interface-placeholder" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#a0a0b0', background: 'var(--bg-primary, #0f0f17)', zIndex: 10 }}>
           <h2>Configuration Required</h2>
           <p>Please open settings and configure your API keys and models to continue.</p>
-          <button 
+          <button
             style={{ marginTop: '20px', padding: '10px 20px', background: '#22d3ee', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
             onClick={() => setIsSettingsOpen(true)}
           >

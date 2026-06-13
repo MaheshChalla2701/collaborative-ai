@@ -78,14 +78,14 @@ export default function ChatInterface({ conversation, onSendMessage, isLoading }
             <textarea
               ref={textareaRef}
               className="message-input"
-              placeholder="Create a new conversation first..."
+              placeholder="Ask anything..."
               value={input}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              disabled={true}
+              disabled={isLoading}
               rows={1}
             />
-            <button type="submit" className="send-button" disabled={true}>Send</button>
+            <button type="submit" className="send-button" disabled={!input.trim() || isLoading}>Send</button>
           </form>
           <p className="input-hint">Enter to send · Shift+Enter for new line</p>
         </div>
