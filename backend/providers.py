@@ -126,6 +126,14 @@ async def query_model(
             messages=messages,
             timeout=timeout
         )
+    elif provider == "cerebras":
+        return await query_openai_compatible(
+            url="https://api.cerebras.ai/v1/chat/completions",
+            api_key=api_key,
+            model=model,
+            messages=messages,
+            timeout=timeout
+        )
     else:
         print(f"Unknown provider: {provider}")
         return None

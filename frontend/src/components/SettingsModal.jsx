@@ -10,10 +10,15 @@ const PROVIDERS = [
     icon: '⚡',
     docsUrl: 'https://console.groq.com/keys',
     models: [
-      { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', tier: 'Free', context: '128K' },
-      { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', tier: 'Free', context: '128K' },
-      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', tier: 'Free', context: '32K' },
-      { id: 'gemma2-9b-it', name: 'Gemma 2 9B', tier: 'Free', context: '8K' },
+      { id: 'llama-3.1-8b-instant',                  name: 'Llama 3.1 8B Instant',     tier: 'Free',     context: '128K' },
+      { id: 'llama-3.3-70b-versatile',               name: 'Llama 3.3 70B Versatile',  tier: 'Free',     context: '128K' },
+      { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout 17B',    tier: 'Free',     context: '128K' },
+      { id: 'qwen/qwen3-32b',                         name: 'Qwen 3 32B',               tier: 'Free',     context: '128K' },
+      { id: 'openai/gpt-oss-20b',                     name: 'GPT-OSS 20B',              tier: 'Free',     context: '32K'  },
+      { id: 'openai/gpt-oss-120b',                    name: 'GPT-OSS 120B',             tier: 'Free',     context: '32K'  },
+      { id: 'moonshotai/kimi-k2-instruct',            name: 'Kimi K2',                  tier: 'Free',     context: '128K' },
+      { id: 'groq/compound-mini',                     name: 'Groq Compound Mini',       tier: 'Free',     context: '128K' },
+      { id: 'groq/compound',                          name: 'Groq Compound',            tier: 'Free',     context: '128K' },
     ]
   },
   {
@@ -24,8 +29,9 @@ const PROVIDERS = [
     icon: '✨',
     docsUrl: 'https://aistudio.google.com/app/apikey',
     models: [
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', tier: 'Freemium', context: '2M' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', tier: 'Freemium', context: '1M' },
+      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', tier: 'Free',     context: '1M' },
+      { id: 'gemini-2.5-flash',      name: 'Gemini 2.5 Flash',      tier: 'Free',     context: '1M' },
+      { id: 'gemini-2.5-pro',        name: 'Gemini 2.5 Pro',        tier: 'Freemium', context: '2M' },
     ]
   },
   {
@@ -36,9 +42,28 @@ const PROVIDERS = [
     icon: '🤗',
     docsUrl: 'https://huggingface.co/settings/tokens',
     models: [
-      { id: 'mistralai/Mixtral-8x7B-Instruct-v0.1', name: 'Mixtral 8x7B', tier: 'Free', context: '32K' },
-      { id: 'meta-llama/Meta-Llama-3-8B-Instruct', name: 'Llama 3 8B', tier: 'Free', context: '8K' },
-      { id: 'HuggingFaceH4/zephyr-7b-beta', name: 'Zephyr 7B', tier: 'Free', context: '4K' },
+      { id: 'Qwen/Qwen3-32B',                             name: 'Qwen3 32B',               tier: 'Free', context: '32K' },
+      { id: 'meta-llama/Llama-3.3-70B-Instruct',          name: 'Llama 3.3 70B Instruct',  tier: 'Free', context: '128K' },
+      { id: 'google/gemma-3-12b-it',                      name: 'Gemma 3 12B',              tier: 'Free', context: '128K' },
+      { id: 'mistralai/Mistral-7B-Instruct-v0.3',         name: 'Mistral 7B Instruct',      tier: 'Free', context: '32K' },
+      { id: 'deepseek-ai/DeepSeek-R1',                    name: 'DeepSeek R1',              tier: 'Free', context: '64K' },
+      { id: 'microsoft/phi-4',                            name: 'Phi-4',                    tier: 'Free', context: '16K' },
+    ]
+  },
+  {
+    key: 'cerebras',
+    label: 'Cerebras',
+    placeholder: 'csk_...',
+    description: 'Blazing fast inference on WSE-3 chips.',
+    icon: '🧠',
+    docsUrl: 'https://cloud.cerebras.ai/',
+    models: [
+      { id: 'gpt-oss-120b',            name: 'GPT-OSS 120B',          tier: 'Free', context: '32K' },
+      { id: 'qwen-3-235b-instruct',    name: 'Qwen 3 235B Instruct',  tier: 'Free', context: '32K' },
+      { id: 'zai-glm-4.7',             name: 'ZAI GLM 4.7',           tier: 'Free', context: '32K' },
+      { id: 'llama3.1-8b',             name: 'Llama 3.1 8B',          tier: 'Free', context: '8K' },
+      { id: 'deepseek-r1',             name: 'DeepSeek R1',           tier: 'Free', context: '64K' },
+      { id: 'llama3.3-70b',            name: 'Llama 3.3 70B',         tier: 'Free', context: '8K' },
     ]
   }
 ];
@@ -49,14 +74,14 @@ PROVIDERS.forEach(p => p.models.forEach(m => { MODEL_LOOKUP[m.id] = { ...m, prov
 
 export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }) {
   const [activeTab, setActiveTab] = useState('groq');
-  const [keys, setKeys] = useState({ groq: '', gemini: '', huggingface: '' });
-  const [showKeys, setShowKeys] = useState({ groq: false, gemini: false, huggingface: false });
+  const [keys, setKeys] = useState({ groq: '', gemini: '', huggingface: '', cerebras: '' });
+  const [showKeys, setShowKeys] = useState({ groq: false, gemini: false, huggingface: false, cerebras: false });
   const [selectedModels, setSelectedModels] = useState([]);
   const [masterModel, setMasterModel] = useState(null);
 
   useEffect(() => {
     if (isOpen && initialConfig) {
-      setKeys(initialConfig.keys || { groq: '', gemini: '', huggingface: '' });
+      setKeys(initialConfig.keys || { groq: '', gemini: '', huggingface: '', cerebras: '' });
       setSelectedModels(initialConfig.council_models || []);
       setMasterModel(initialConfig.master_model || null);
     }
