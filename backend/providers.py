@@ -31,9 +31,13 @@ async def query_openai_compatible(
                 'content': message.get('content', ''),
                 'reasoning_details': message.get('reasoning_details')
             }
+    except httpx.HTTPStatusError as e:
+        error_text = e.response.text
+        print(f"Error querying {url} for model {model}: HTTP {e.response.status_code} - {error_text}")
+        return {'content': f"API Error (HTTP {e.response.status_code}): {error_text}"}
     except Exception as e:
         print(f"Error querying {url} for model {model}: {e}")
-        return None
+        return {'content': f"Error: {str(e)}"}
 
 
 async def query_gemini(
@@ -69,14 +73,22 @@ async def query_gemini(
             
             data = response.json()
             if "candidates" in data and len(data["candidates"]) > 0:
-                content = data["candidates"][0]["content"]["parts"][0]["text"]
-                return {
-                    'content': content
-                }
-            return None
+                # Some candidates might be blocked by safety filters and lack "content"
+                if "content" in data["candidates"][0] and "parts" in data["candidates"][0]["content"]:
+                    content = data["candidates"][0]["content"]["parts"][0]["text"]
+                    return {
+                        'content': content
+                    }
+                else:
+                    return {'content': f"Gemini API blocked response: {data['candidates'][0].get('finishReason', 'Unknown reason')}"}
+            return {'content': f"Gemini API Error: No candidates returned. Response: {data}"}
+    except httpx.HTTPStatusError as e:
+        error_text = e.response.text
+        print(f"Error querying Gemini model {model}: HTTP {e.response.status_code} - {error_text}")
+        return {'content': f"API Error (HTTP {e.response.status_code}): {error_text}"}
     except Exception as e:
         print(f"Error querying Gemini model {model}: {e}")
-        return None
+        return {'content': f"Error: {str(e)}"}
 
 
 async def query_model(

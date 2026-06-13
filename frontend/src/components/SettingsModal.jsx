@@ -3,26 +3,31 @@ import './SettingsModal.css';
 
 const PROVIDER_MODELS = {
   groq: [
-    { id: 'llama3-70b-8192', name: 'Llama 3 70B' },
-    { id: 'llama3-8b-8192', name: 'Llama 3 8B' },
-    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
-    { id: 'gemma-7b-it', name: 'Gemma 7B' }
+    { id: 'llama3-70b-8192', name: 'Llama 3 70B', tier: 'Free' },
+    { id: 'llama3-8b-8192', name: 'Llama 3 8B', tier: 'Free' },
+    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', tier: 'Free' },
+    { id: 'gemma-7b-it', name: 'Gemma 7B', tier: 'Free' }
   ],
   gemini: [
-    { id: 'gemini-1.5-pro-latest', name: 'Gemini 1.5 Pro' },
-    { id: 'gemini-1.5-flash-latest', name: 'Gemini 1.5 Flash' }
+    { id: 'gemini-1.5-pro-latest', name: 'Gemini 1.5 Pro', tier: 'Freemium' },
+    { id: 'gemini-1.5-flash-latest', name: 'Gemini 1.5 Flash', tier: 'Freemium' }
   ],
   huggingface: [
-    { id: 'mistralai/Mixtral-8x7B-Instruct-v0.1', name: 'Mixtral 8x7B (HF)' },
-    { id: 'meta-llama/Meta-Llama-3-8B-Instruct', name: 'Llama 3 8B (HF)' },
-    { id: 'HuggingFaceH4/zephyr-7b-beta', name: 'Zephyr 7B (HF)' }
+    { id: 'mistralai/Mixtral-8x7B-Instruct-v0.1', name: 'Mixtral 8x7B (HF)', tier: 'Free' },
+    { id: 'meta-llama/Meta-Llama-3-8B-Instruct', name: 'Llama 3 8B (HF)', tier: 'Free' },
+    { id: 'HuggingFaceH4/zephyr-7b-beta', name: 'Zephyr 7B (HF)', tier: 'Free' }
   ]
 };
 
 export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }) {
   const [keys, setKeys] = useState({ groq: '', gemini: '', huggingface: '' });
+  const [showKeys, setShowKeys] = useState({ groq: false, gemini: false, huggingface: false });
   const [selectedModels, setSelectedModels] = useState([]);
   const [masterModel, setMasterModel] = useState(null);
+
+  const toggleShowKey = (provider) => {
+    setShowKeys(prev => ({ ...prev, [provider]: !prev[provider] }));
+  };
 
   useEffect(() => {
     if (isOpen && initialConfig) {
@@ -77,32 +82,62 @@ export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }
             
             <div className="input-group">
               <label>Groq API Key</label>
-              <input 
-                type="password" 
-                value={keys.groq} 
-                onChange={(e) => handleKeyChange('groq', e.target.value)}
-                placeholder="gsk_..."
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showKeys.groq ? "text" : "password"} 
+                  value={keys.groq} 
+                  onChange={(e) => handleKeyChange('groq', e.target.value)}
+                  placeholder="gsk_..."
+                />
+                <button 
+                  type="button" 
+                  className="eye-btn" 
+                  onClick={() => toggleShowKey('groq')}
+                  title={showKeys.groq ? "Hide key" : "Show key"}
+                >
+                  {showKeys.groq ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             
             <div className="input-group">
               <label>Google Gemini API Key</label>
-              <input 
-                type="password" 
-                value={keys.gemini} 
-                onChange={(e) => handleKeyChange('gemini', e.target.value)}
-                placeholder="AIza..."
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showKeys.gemini ? "text" : "password"} 
+                  value={keys.gemini} 
+                  onChange={(e) => handleKeyChange('gemini', e.target.value)}
+                  placeholder="AIza..."
+                />
+                <button 
+                  type="button" 
+                  className="eye-btn" 
+                  onClick={() => toggleShowKey('gemini')}
+                  title={showKeys.gemini ? "Hide key" : "Show key"}
+                >
+                  {showKeys.gemini ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             
             <div className="input-group">
               <label>Hugging Face Token</label>
-              <input 
-                type="password" 
-                value={keys.huggingface} 
-                onChange={(e) => handleKeyChange('huggingface', e.target.value)}
-                placeholder="hf_..."
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showKeys.huggingface ? "text" : "password"} 
+                  value={keys.huggingface} 
+                  onChange={(e) => handleKeyChange('huggingface', e.target.value)}
+                  placeholder="hf_..."
+                />
+                <button 
+                  type="button" 
+                  className="eye-btn" 
+                  onClick={() => toggleShowKey('huggingface')}
+                  title={showKeys.huggingface ? "Hide key" : "Show key"}
+                >
+                  {showKeys.huggingface ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -125,7 +160,8 @@ export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }
                         checked={selectedModels.some(m => m.id === model.id)}
                         onChange={() => handleModelToggle(provider, model.id)}
                       />
-                      {model.name}
+                      <span className="model-name-label">{model.name}</span>
+                      <span className={`model-tier tier-${model.tier.toLowerCase()}`}>{model.tier}</span>
                     </label>
                   ))}
                 </div>
