@@ -6,7 +6,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { auth, googleProvider } from '../../firebase';
+import { auth, googleProvider } from '../firebase';
 import './AuthPage.css';
 
 // Google SVG icon
