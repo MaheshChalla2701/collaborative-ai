@@ -11,6 +11,7 @@ import asyncio
 import os
 
 from . import storage
+from . import memory as mem
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
 app = FastAPI(title="Collaborative AI API")
@@ -89,6 +90,19 @@ async def get_conversation(conversation_id: str):
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conversation
+
+
+@app.get("/api/memory")
+async def get_memory():
+    """Return current persistent memory facts."""
+    return mem.get_memory()
+
+
+@app.delete("/api/memory")
+async def clear_memory():
+    """Clear all memory facts."""
+    mem.save_memory([])
+    return {"status": "cleared"}
 
 
 @app.delete("/api/conversations/{conversation_id}")
@@ -201,6 +215,16 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 stage1_results,
                 stage2_results,
                 stage3_result
+            )
+
+            # Fire-and-forget memory extraction (non-blocking)
+            assistant_text = stage3_result.get('response', '')
+            asyncio.create_task(
+                mem.extract_and_update_memory(
+                    request.content,
+                    assistant_text,
+                    request.config
+                )
             )
 
             # Send completion event

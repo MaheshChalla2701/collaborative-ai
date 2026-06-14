@@ -43,6 +43,27 @@ const PROVIDERS = [
       { id: 'gpt-oss-120b', name: 'GPT-OSS 120B', tier: 'Free', context: '32K' },
       { id: 'zai-glm-4.7',  name: 'ZAI GLM 4.7',  tier: 'Free', context: '32K' },
     ]
+  },
+  {
+    key: 'openrouter',
+    label: 'OpenRouter',
+    placeholder: 'sk-or-...',
+    description: 'Access hundreds of models via one API.',
+    icon: '🔀',
+    docsUrl: 'https://openrouter.ai/keys',
+    models: [
+      { id: 'nvidia/nemotron-nano-9b-v2:free',                  name: 'Nemotron Nano 9B V2',    tier: 'Free', context: '128K' },
+      { id: 'nvidia/nemotron-nano-12b-v2-vl:free',              name: 'Nemotron Nano 12B VL',   tier: 'Free', context: '128K' },
+      { id: 'nvidia/nemotron-3-nano-30b-a3b:free',              name: 'Nemotron 3 Nano 30B',    tier: 'Free', context: '256K' },
+      { id: 'nvidia/nemotron-3-super-120b-a12b:free',           name: 'Nemotron 3 Super 120B',  tier: 'Free', context: '1M'   },
+      { id: 'nvidia/nemotron-3-ultra-550b-a55b:free',           name: 'Nemotron 3 Ultra 550B',  tier: 'Free', context: '1M'   },
+      { id: 'openai/gpt-oss-20b:free',                          name: 'GPT-OSS 20B',            tier: 'Free', context: '131K' },
+      { id: 'openai/gpt-oss-120b:free',                         name: 'GPT-OSS 120B',           tier: 'Free', context: '131K' },
+      { id: 'qwen/qwen3-next-80b-a3b-instruct:free',            name: 'Qwen3 Next 80B A3B',     tier: 'Free', context: '256K' },
+      { id: 'nex-agi/nex-n2-pro:free',                          name: 'Nex-N2-Pro',             tier: 'Free', context: '256K' },
+      { id: 'poolside/laguna-m.1:free',                         name: 'Laguna M.1',             tier: 'Free', context: '256K' },
+      { id: 'poolside/laguna-xs.2:free',                        name: 'Laguna XS.2',            tier: 'Free', context: '256K' },
+    ]
   }
 ];
 
@@ -54,15 +75,15 @@ PROVIDERS.forEach(p => p.models.forEach(m => { MODEL_LOOKUP[m.id] = { ...m, prov
 const VALID_MODEL_IDS = new Set(Object.keys(MODEL_LOOKUP));
 
 export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }) {
-  const [activeTab, setActiveTab] = useState('groq');
-  const [keys, setKeys] = useState({ groq: '', gemini: '', cerebras: '' });
-  const [showKeys, setShowKeys] = useState({ groq: false, gemini: false, cerebras: false });
+  const [activeTab, setActiveTab] = useState('keys');
+  const [keys, setKeys] = useState({ groq: '', gemini: '', cerebras: '', openrouter: '' });
+  const [showKeys, setShowKeys] = useState({ groq: false, gemini: false, cerebras: false, openrouter: false });
   const [selectedModels, setSelectedModels] = useState([]);
   const [masterModel, setMasterModel] = useState(null);
 
   useEffect(() => {
     if (isOpen && initialConfig) {
-      setKeys(initialConfig.keys || { groq: '', gemini: '', cerebras: '' });
+      setKeys(initialConfig.keys || { groq: '', gemini: '', cerebras: '', openrouter: '' });
       // Filter out any stale model IDs that no longer exist in the current PROVIDERS list.
       // This prevents old localStorage data (from previous app versions with different models)
       // from silently inflating the council and sending invalid model IDs to the backend.
@@ -160,7 +181,20 @@ export default function SettingsModal({ isOpen, onClose, onSave, initialConfig }
                           onClick={() => toggleShowKey(provider.key)}
                           title={showKeys[provider.key] ? 'Hide' : 'Show'}
                         >
-                          {showKeys[provider.key] ? '🙈' : '👁'}
+                          {showKeys[provider.key] ? (
+                            // Eye-off (hide)
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                          ) : (
+                            // Eye (show)
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                          )}
                         </button>
                       </div>
                       <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer" className="sm-get-key-link">

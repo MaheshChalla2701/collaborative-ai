@@ -49,18 +49,25 @@ async def query_gemini(
     """Client for Google Gemini API."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
-    # Convert messages to Gemini format
+    # Extract system messages for Gemini's system_instruction field
+    system_parts = [m["content"] for m in messages if m.get("role") == "system"]
+
+    # Convert non-system messages to Gemini format
     gemini_contents = []
     for msg in messages:
+        if msg.get("role") == "system":
+            continue  # handled via system_instruction
         role = "user" if msg["role"] == "user" else "model"
         gemini_contents.append({
             "role": role,
             "parts": [{"text": msg["content"]}]
         })
-        
-    payload = {
-        "contents": gemini_contents
-    }
+
+    payload = {"contents": gemini_contents}
+    if system_parts:
+        payload["system_instruction"] = {
+            "parts": [{"text": "\n\n".join(system_parts)}]
+        }
     
     headers = {
         "Content-Type": "application/json",
@@ -129,6 +136,14 @@ async def query_model(
     elif provider == "cerebras":
         return await query_openai_compatible(
             url="https://api.cerebras.ai/v1/chat/completions",
+            api_key=api_key,
+            model=model,
+            messages=messages,
+            timeout=timeout
+        )
+    elif provider == "openrouter":
+        return await query_openai_compatible(
+            url="https://openrouter.ai/api/v1/chat/completions",
             api_key=api_key,
             model=model,
             messages=messages,
