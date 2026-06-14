@@ -11,6 +11,7 @@ wheels/
 
 # Keys and secrets
 .env
+serviceAccountKey.json
 
 # Data files
 data/
@@ -19,3 +20,4 @@ data/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/.env.local

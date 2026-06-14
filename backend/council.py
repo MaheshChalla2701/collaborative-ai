@@ -1,13 +1,14 @@
 """3-stage LLM Council orchestration."""
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from .providers import query_models_parallel, query_model
-from .memory import get_memory_prompt
+from .firestore_memory import get_memory_prompt
 
 
 async def stage1_collect_responses(
     user_query: str,
     conversation_history: List[Dict[str, Any]] = None,
+    uid: Optional[str] = None,
     config: Any = None
 ) -> List[Dict[str, Any]]:
     """
@@ -15,8 +16,8 @@ async def stage1_collect_responses(
     """
     messages = []
 
-    # Inject persistent memory as system prompt (if any facts exist)
-    memory_prompt = get_memory_prompt()
+    # Inject persistent memory as system prompt (per-user if uid provided)
+    memory_prompt = get_memory_prompt(uid) if uid else None
     if memory_prompt:
         messages.append({"role": "system", "content": memory_prompt})
 
@@ -122,6 +123,7 @@ async def stage3_synthesize_final(
     stage1_results: List[Dict[str, Any]],
     stage2_results: List[Dict[str, Any]],
     conversation_history: List[Dict[str, Any]] = None,
+    uid: Optional[str] = None,
     config: Any = None
 ) -> Dict[str, Any]:
     """
@@ -167,7 +169,7 @@ Provide a clear, well-reasoned final answer that represents the council's collec
 
     # Build messages for chairman — prepend memory if available
     chairman_messages = []
-    memory_prompt = get_memory_prompt()
+    memory_prompt = get_memory_prompt(uid) if uid else None
     if memory_prompt:
         chairman_messages.append({"role": "system", "content": memory_prompt})
     chairman_messages.append({"role": "user", "content": chairman_prompt})
@@ -249,10 +251,11 @@ def generate_conversation_title(user_query: str) -> str:
 async def run_full_council(
     user_query: str,
     conversation_history: List[Dict[str, Any]] = None,
+    uid: Optional[str] = None,
     config: Any = None
 ) -> Tuple[List, List, Dict, Dict]:
     """Run the complete 3-stage council process."""
-    stage1_results = await stage1_collect_responses(user_query, conversation_history, config=config)
+    stage1_results = await stage1_collect_responses(user_query, conversation_history, uid=uid, config=config)
 
     if not stage1_results:
         return [], [], {
@@ -267,7 +270,7 @@ async def run_full_council(
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
 
     stage3_result = await stage3_synthesize_final(
-        user_query, stage1_results, stage2_results, conversation_history, config=config
+        user_query, stage1_results, stage2_results, conversation_history, uid=uid, config=config
     )
 
     metadata = {
