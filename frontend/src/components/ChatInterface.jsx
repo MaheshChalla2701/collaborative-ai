@@ -78,7 +78,7 @@ export default function ChatInterface({ conversation, onSendMessage, isLoading }
             <textarea
               ref={textareaRef}
               className="message-input"
-              placeholder="Ask anything..."
+              placeholder="Create a new conversation first..."
               value={input}
               onChange={handleInput}
               onKeyDown={handleKeyDown}

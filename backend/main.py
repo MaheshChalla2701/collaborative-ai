@@ -168,6 +168,9 @@ async def send_message_stream(
             stage1_results = await stage1_collect_responses(
                 request.content, conversation_history, uid=uid, config=request.config
             )
+            if not stage1_results:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'All models failed to respond, possibly due to rate limits. Please try again with fewer models.'})}\n\n"
+                return
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
             # Stage 2

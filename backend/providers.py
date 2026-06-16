@@ -157,15 +157,17 @@ async def query_model(
 async def query_models_parallel(
     models_config: List[Dict[str, str]],
     keys: Dict[str, str],
-    messages: List[Dict[str, str]]
+    messages: List[Dict[str, str]],
+    max_concurrent: int = 5
 ) -> Dict[str, Optional[Dict[str, Any]]]:
     """
-    Query multiple models in parallel across different providers.
+    Query multiple models in parallel across different providers, with a concurrency limit.
     
     Args:
         models_config: List of dicts with 'id' and 'provider'
         keys: Dict mapping provider names to API keys
         messages: List of messages
+        max_concurrent: Maximum number of simultaneous API requests
         
     Returns:
         Dict mapping model id to response
@@ -182,13 +184,28 @@ async def query_models_parallel(
     if not valid_models:
         return {}
 
+    sem = asyncio.Semaphore(max_concurrent)
+
+    async def _query_with_sem(model_id: str, provider: str, api_key: str):
+        async with sem:
+            # We add a small retry wrapper here for momentary 429s
+            for attempt in range(3):
+                res = await query_model(model_id, provider, api_key, messages)
+                # If we got a response, return it
+                if res is not None:
+                    return res
+                # If it's None, it could be a 429. Wait a bit and retry.
+                if attempt < 2:
+                    await asyncio.sleep(2 * (attempt + 1))
+            return None
+
     # Create tasks
     tasks = []
     for model_info in valid_models:
         model_id = model_info["id"]
         provider = model_info["provider"]
         api_key = keys[provider]
-        tasks.append(query_model(model_id, provider, api_key, messages))
+        tasks.append(_query_with_sem(model_id, provider, api_key))
 
     # Wait for all to complete
     responses = await asyncio.gather(*tasks)
