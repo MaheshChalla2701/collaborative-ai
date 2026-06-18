@@ -8,9 +8,21 @@ Built entirely by **Mahesh Challa** as a personal project to explore how multipl
 
 ## 💡 What is This?
 
-Instead of relying on a single AI model, **Collaborative AI** routes your query to a **council of LLMs** via [OpenRouter](https://openrouter.ai/). The models independently answer your question, anonymously critique each other's responses, and finally a designated **Chairman LLM** synthesizes everything into one polished final answer.
+Instead of relying on a single AI model, **Collaborative AI** routes your query to a **council of LLMs**. The models independently answer your question, anonymously critique each other's responses, and finally a designated **Chairman LLM** synthesizes everything into one polished final answer.
 
 It's like having a board of AI experts deliberate before giving you a response.
+
+---
+
+## ✨ Features
+
+- **Multi-Provider Support**: Route queries natively to models across **Groq, Google Gemini, Hugging Face, Cerebras, and OpenRouter**.
+- **Firebase Authentication**: Secure user login via Google Sign-In.
+- **Cloud Storage (Firestore)**: Conversations, user settings, and persistent memory are securely stored in Firebase.
+- **Dynamic User Settings**: Configure your API keys and select your own council models directly from the UI.
+- **Persistent User Memory**: The system automatically extracts and remembers long-term facts about you across conversations.
+- **Anonymized Peer Review**: Models receive each other's responses labeled as "Response A/B/C/..." to prevent identity-based bias in rankings.
+- **Graceful Degradation**: If one model fails, the council continues with the remaining successful responses.
 
 ---
 
@@ -19,22 +31,11 @@ It's like having a board of AI experts deliberate before giving you a response.
 ### Stage 1 — Individual Opinions
 Each council model independently answers the user's query in parallel. All responses are shown in a tab view for side-by-side inspection.
 
-![Stage 1: Individual Responses](stage1.png)
-
----
-
 ### Stage 2 — Anonymous Peer Review
-Each model receives all other models' responses, **anonymized** (labeled as "Response A", "Response B", etc.) to prevent identity bias. Each model ranks the responses by accuracy and insight.
-
-![Stage 2: Peer Rankings](stage2.png)
-![Aggregate Rankings](aggregate_rankings.png)
-
----
+Each model receives all other models' responses, **anonymized** to prevent identity bias. Each model ranks the responses by accuracy and insight.
 
 ### Stage 3 — Chairman Synthesis
 The **Chairman LLM** takes all Stage 1 responses and Stage 2 rankings, then synthesizes a final, consolidated answer presented to the user.
-
-![Stage 3: Final Council Answer](stage3.png)
 
 ---
 
@@ -43,13 +44,13 @@ The **Chairman LLM** takes all Stage 1 responses and Stage 2 rankings, then synt
 ```
 User Query
     ↓
-Stage 1: Parallel queries → [individual responses from all council models]
+Stage 1: Parallel queries to multiple providers → [individual responses]
     ↓
 Stage 2: Anonymize → Parallel ranking queries → [evaluations + parsed rankings]
     ↓
 Aggregate Rankings Calculation → [sorted by average position]
     ↓
-Stage 3: Chairman synthesizes with full context
+Stage 3: Chairman synthesizes with full context (including Persistent Memory)
     ↓
 Return: { stage1, stage2, stage3, metadata }
     ↓
@@ -60,21 +61,24 @@ Frontend: Tab view + ranking UI + validation
 
 | File | Purpose |
 |------|---------|
-| `config.py` | Council model list, Chairman model, API key config |
-| `openrouter.py` | Async HTTP client for OpenRouter API |
+| `main.py` | FastAPI app, CORS, REST endpoints, SSE streaming |
 | `council.py` | Core 3-stage deliberation logic |
-| `storage.py` | JSON-based conversation persistence |
-| `main.py` | FastAPI app, CORS, REST endpoints |
+| `providers.py` | Multi-provider HTTP client (Groq, Gemini, HF, Cerebras, OpenRouter) |
+| `firestore_storage.py` | Conversation persistence using Firebase Firestore |
+| `firestore_memory.py` | Extracts and manages persistent user memory facts |
+| `user_settings.py` | Manages per-user API keys and model configurations |
+| `firebase_admin_init.py` | Initializes Firebase Admin SDK |
 
 ### Frontend (`frontend/src/`)
 
 | File | Purpose |
 |------|---------|
-| `App.jsx` | Conversation state management |
-| `components/ChatInterface.jsx` | Message input UI |
-| `components/Stage1.jsx` | Tab view of individual model responses |
-| `components/Stage2.jsx` | Raw peer evaluations + de-anonymized rankings |
-| `components/Stage3.jsx` | Final synthesized chairman response |
+| `App.jsx` | Routing and auth state management |
+| `firebase.js` | Firebase SDK initialization for the client |
+| `components/ChatInterface.jsx` | Main conversation UI and streaming handler |
+| `components/SettingsModal.jsx` | UI to configure API keys and council models |
+| `components/AuthPage.jsx` | Google Sign-In interface |
+| `contexts/` | React Contexts for global state (e.g., Auth) |
 
 ---
 
@@ -85,7 +89,8 @@ Frontend: Tab view + ranking UI + validation
 - Python 3.10+
 - Node.js 18+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
-- An [OpenRouter](https://openrouter.ai/) account + API key
+- A Firebase project (for Auth & Firestore)
+- API Keys for your preferred providers (Groq, Gemini, OpenRouter, etc.)
 
 ---
 
@@ -110,39 +115,31 @@ npm install
 cd ..
 ```
 
-### 3. Configure API Key
+### 3. Configure Firebase (Frontend & Backend)
 
-Create a `.env` file in the project root:
-
+**Frontend:**
+Create a `frontend/.env.local` file with your Firebase project configuration:
 ```env
-OPENROUTER_API_KEY=sk-or-v1-...
+VITE_FIREBASE_API_KEY="..."
+VITE_FIREBASE_AUTH_DOMAIN="..."
+VITE_FIREBASE_PROJECT_ID="..."
+VITE_FIREBASE_STORAGE_BUCKET="..."
+VITE_FIREBASE_MESSAGING_SENDER_ID="..."
+VITE_FIREBASE_APP_ID="..."
 ```
 
-Get your API key at [openrouter.ai](https://openrouter.ai/). Make sure to add credits or enable auto top-up.
-
-### 4. Configure the Council (Optional)
-
-Edit `backend/config.py` to customize which models sit on your council and which one is the Chairman:
-
-```python
-COUNCIL_MODELS = [
-    "amazon/nova-2-lite-free",
-    "arcee-ai/trinity-mini-free",
-    "deepseek/deepseek-v3.2",
-    "mistralai/ministral-3-14b-instruct-2512",
-    "x-ai/grok-4.1-fast",
-    "nvidia/nemotron-nano-12b-v2-vl:free",
-    "openai/gpt-oss-safeguard-20b",
-    "qwen/qwen3-vl-30b-a3b-thinking",
-    "stepfun/step-3.5-flash:free",
-    "arcee-ai/trinity-large-preview:free",
-    "nvidia/nemotron-3-nano-30b-a3b:free",
-]
-
-CHAIRMAN_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
+**Backend:**
+Create a `.env` file in the project root containing your Firebase Admin credentials (Service Account):
+```env
+FIREBASE_PROJECT_ID="..."
+FIREBASE_PRIVATE_KEY="..."
+FIREBASE_CLIENT_EMAIL="..."
 ```
 
-You can use any model identifier supported by OpenRouter.
+### 4. Configure API Keys & Models (Via UI)
+
+Unlike older versions, you do **not** need to hardcode API keys or model lists in configuration files. 
+Once you start the app and log in, click the **Settings** icon to enter your API keys and build your custom council of LLMs!
 
 ---
 
@@ -177,49 +174,10 @@ Then open **http://localhost:5173** in your browser.
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | FastAPI (Python 3.10+), async `httpx`, Pydantic v2 |
-| **Frontend** | React + Vite, `react-markdown` |
-| **AI Gateway** | OpenRouter API (multi-model routing) |
-| **Storage** | JSON files in `data/conversations/` |
+| **Frontend** | React + Vite, Firebase Auth |
+| **Database** | Firebase Firestore (Conversations, Memory, Settings) |
+| **AI Gateway** | Native integration with Groq, Gemini, HF, Cerebras, OpenRouter |
 | **Package Mgmt** | `uv` (Python), `npm` (JavaScript) |
-
----
-
-## ✨ Key Design Decisions
-
-- **Anonymized Peer Review** — Models receive each other's responses labeled as "Response A/B/C/..." to prevent identity-based bias in rankings.
-- **Graceful Degradation** — If one model fails, the council continues with the remaining successful responses.
-- **Full Transparency** — All raw model outputs and extracted rankings are inspectable in the UI for trust and debugging.
-- **Ephemeral Metadata** — The label-to-model mapping and aggregate rankings are returned via the API but not persisted to storage (privacy-friendly by design).
-
----
-
-## 📁 Project Structure
-
-```
-collaborative-ai/
-├── backend/
-│   ├── config.py         # Model config & API keys
-│   ├── council.py        # 3-stage deliberation core
-│   ├── main.py           # FastAPI app & routes
-│   ├── openrouter.py     # Async OpenRouter client
-│   └── storage.py        # Conversation persistence
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── api.js
-│   │   └── components/
-│   │       ├── ChatInterface.jsx
-│   │       ├── Stage1.jsx
-│   │       ├── Stage2.jsx
-│   │       └── Stage3.jsx
-│   └── vite.config.js
-├── data/
-│   └── conversations/    # Stored conversation JSON files
-├── .env                  # API key (not committed)
-├── pyproject.toml
-├── start.sh              # Convenience startup script
-└── README.md
-```
 
 ---
 
